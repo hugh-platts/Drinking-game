@@ -1,234 +1,277 @@
- <!DOCTYPE html>
- <html lang="en">
- <head>
-     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>Find the Rat! 🐀</title>
-     <style>
-         /* --- Basic Setup & Fonts --- */
-         :root {
-             --background-color: #2c3e50;
-             --container-color: #34495e;
-             --text-color: #ecf0f1;
-             --accent-color: #e74c3c;
-             --safe-color: #2ecc71;
-             --bomb-color: #f39c12; /* Color for the bomb */
-         }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find the Rat! 🐀</title>
+    <style>
+        /* --- Basic Setup & Fonts --- */
+        :root {
+            --background-color: #2c3e50;
+            --container-color: #34495e;
+            --text-color: #ecf0f1;
+            --rat-color: #e74c3c; /* Formerly accent-color */
+            --safe-color: #2ecc71;
+            --bomb-color: #f39c12;
+            --knife-color: #3498db;
+        }
 
-         body {
-             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-             background-color: var(--background-color);
-             color: var(--text-color);
-             text-align: center;
-             margin: 0;
-             padding: 20px;
-             display: flex;
-             justify-content: center;
-             align-items: center;
-             min-height: 100vh;
-             transition: background-color 0.5s; /* Smooth transition for background color */
-         }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.1s ease-in-out;
+        }
 
-         /* --- Game Container --- */
-         .game-container {
-             width: 100%;
-             max-width: 500px;
-             background-color: var(--container-color);
-             padding: 20px;
-             border-radius: 15px;
-             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-         }
+        /* --- Game Container --- */
+        .game-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: var(--container-color);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
 
-         h1 {
-             color: var(--accent-color);
-             margin-bottom: 10px;
-         }
+        h1 {
+            color: var(--rat-color);
+            margin-bottom: 5px;
+        }
+        
+        #game-counter {
+            font-weight: bold;
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
 
-         p {
-             font-size: 1.1em;
-             margin-bottom: 25px;
-         }
+        p {
+            font-size: 1.1em;
+            margin-bottom: 25px;
+        }
 
-         /* --- Game Board --- */
-         .game-board {
-             display: grid;
-             grid-template-columns: repeat(5, 1fr);
-             gap: 15px;
-             margin-bottom: 25px;
-         }
+        /* --- Game Board --- */
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
 
-         .bin {
-             background-color: var(--background-color);
-             font-size: 3em;
-             padding: 10px;
-             border-radius: 10px;
-             cursor: pointer;
-             transition: transform 0.2s, background-color 0.2s;
-             user-select: none; /* Prevents text selection on click */
-         }
+        .bin {
+            background-color: var(--background-color);
+            font-size: 3em;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            user-select: none; /* Prevents text selection on click */
+        }
 
-         .bin:hover {
-             transform: scale(1.1);
-         }
-         
-         /* State when a bin has been revealed */
-         .bin.revealed {
-             background-color: #4a6572;
-             cursor: not-allowed;
-         }
+        .bin:hover {
+            transform: scale(1.1);
+        }
+        
+        /* State when a bin has been revealed */
+        .bin.revealed {
+            background-color: #4a6572;
+            cursor: not-allowed;
+        }
 
-         /* --- Result Message & Button --- */
-         #result {
-             font-size: 1.5em;
-             font-weight: bold;
-             min-height: 50px;
-             color: var(--accent-color);
-         }
-         
-         .safe {
-             color: var(--safe-color) !important;
-         }
+        /* --- Result Message & Button --- */
+        #result {
+            font-size: 1.5em;
+            font-weight: bold;
+            min-height: 50px;
+        }
+        
+        .rat-found { color: var(--rat-color); }
+        .safe { color: var(--safe-color); }
+        .bomb-found { color: var(--bomb-color); }
+        .knife-found { color: var(--knife-color); }
 
-         .bomb {
-             color: var(--bomb-color) !important;
-         }
+        #play-again {
+            display: none; /* Hidden by default */
+            background-color: var(--rat-color);
+            color: var(--text-color);
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+        }
 
-         #play-again {
-             display: none; /* Hidden by default */
-             background-color: var(--accent-color);
-             color: var(--text-color);
-             border: none;
-             padding: 15px 30px;
-             font-size: 1.2em;
-             border-radius: 10px;
-             cursor: pointer;
-             margin-top: 15px;
-             transition: background-color 0.2s;
-         }
+        #play-again:hover {
+            background-color: #c0392b;
+        }
 
-         #play-again:hover {
-             background-color: #c0392b;
-         }
+        /* --- Mobile Breakpoints --- */
+        @media (max-width: 480px) {
+            .game-board {
+                grid-template-columns: repeat(2, 1fr); /* 2 bins per row on small screens */
+                gap: 20px;
+            }
+            .bin {
+                font-size: 4em; /* Make emojis bigger on mobile */
+            }
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
 
-         /* --- Mobile Breakpoints --- */
-         @media (max-width: 480px) {
-             .game-board {
-                 grid-template-columns: repeat(2, 1fr); /* 2 bins per row on small screens */
-                 gap: 20px;
-             }
-             .bin {
-                 font-size: 4em; /* Make emojis bigger on mobile */
-             }
-             h1 {
-                 font-size: 2em;
-             }
-         }
-     </style>
- </head>
- <body>
+    <div class="game-container">
+        <h1>Find the Rat! 🐀</h1>
+        <div id="game-counter"></div>
+        <p>Click a bin to reveal what's inside. Good luck!</p>
+        
+        <div class="game-board" id="game-board">
+            </div>
 
-     <div class="game-container">
-         <h1>Find the Rat! 🐀</h1>
-         <p>Click on a bin to find the rat. If you find it, you drink! Every 10 games, there's also a bomb!</p>
-         
-         <div class="game-board" id="game-board">
-             </div>
+        <div id="result"></div>
+        <button id="play-again">Play Again</button>
 
-         <div id="result"></div>
-         <button id="play-again">Play Again</button>
+        <audio id="rat-audio" src="pessi.mp3" preload="auto"></audio>
+        <audio id="bomb-audio" src="GordonRamsay.mp3" preload="auto"></audio>
+    </div>
 
-         <audio id="pessi-audio" src="pessi.mp3"></audio>
-     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const gameBoard = document.getElementById('game-board');
+            const resultDisplay = document.getElementById('result');
+            const playAgainButton = document.getElementById('play-again');
+            const gameCounterDisplay = document.getElementById('game-counter');
+            const ratAudio = document.getElementById('rat-audio');
+            const bombAudio = document.getElementById('bomb-audio');
+            const body = document.body;
+            
+            const numBins = 10;
+            const binEmoji = '🗑️';
+            const ratEmoji = '🐀';
+            const bombEmoji = '💣';
+            const knifeEmoji = '🔪';
 
-     <script>
-         document.addEventListener('DOMContentLoaded', () => {
-             const gameBoard = document.getElementById('game-board');
-             const resultDisplay = document.getElementById('result');
-             const playAgainButton = document.getElementById('play-again');
-             const pessiAudio = document.getElementById('pessi-audio');
-             const body = document.body;
-             
-             const numBins = 10;
-             const binEmoji = '🗑️';
-             const ratEmoji = '🐀';
-             const bombEmoji = '💣';
-             let ratPosition;
-             let bombPosition;
-             let gameOver;
-             let gameCount = 0;
+            let ratPosition, bombPosition, knifePosition;
+            let gameOver = false;
+            let gameCount = 0;
 
-             function setupGame() {
-                 gameCount++;
-                 // Clear the board and reset state
-                 gameBoard.innerHTML = '';
-                 resultDisplay.innerHTML = '';
-                 resultDisplay.classList.remove('safe', 'bomb');
-                 playAgainButton.style.display = 'none';
-                 body.style.backgroundColor = '#2c3e50'; // Reset background color
-                 gameOver = false;
+            function setupGame() {
+                gameCount++;
+                // Reset visual states
+                body.style.backgroundColor = 'var(--background-color)';
+                resultDisplay.innerHTML = '';
+                resultDisplay.className = ''; // Clear all result classes
+                playAgainButton.style.display = 'none';
+                gameBoard.innerHTML = '';
+                gameOver = false;
+                
+                gameCounterDisplay.textContent = `Game #${gameCount}`;
 
-                 // Determine a new random position for the rat
-                 ratPosition = Math.floor(Math.random() * numBins);
+                // --- Item Placement Logic ---
+                // Default positions to -1 (inactive)
+                ratPosition = -1;
+                bombPosition = -1;
+                knifePosition = -1;
 
-                 // Determine bomb position, every 10 games
-                 bombPosition = (gameCount % 10 === 0) ? Math.floor(Math.random() * numBins) : -1; // -1 means no bomb
+                // Create a shuffled array of possible bin indices (0-9)
+                let positions = Array.from(Array(numBins).keys());
+                for (let i = positions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [positions[i], positions[j]] = [positions[j], positions[i]];
+                }
 
-                 // Ensure the bomb and rat aren't in the same spot
-                 if (bombPosition === ratPosition) {
-                     bombPosition = (bombPosition + 1) % numBins; // Move the bomb if it overlaps
-                 }
+                // Always place the rat
+                ratPosition = positions.pop();
 
-                 // Create and display the bins
-                 for (let i = 0; i < numBins; i++) {
-                     const bin = document.createElement('div');
-                     bin.classList.add('bin');
-                     bin.dataset.index = i; // Store the index of the bin
-                     bin.textContent = binEmoji;
-                     bin.addEventListener('click', handleBinClick);
-                     gameBoard.appendChild(bin);
-                 }
-             }
+                // Place knife every 5 games
+                if (gameCount % 5 === 0) {
+                    knifePosition = positions.pop();
+                }
 
-             function handleBinClick(event) {
-                 if (gameOver) {
-                     return; // Stop the game if it's already over
-                 }
+                // Place bomb every 10 games
+                if (gameCount % 10 === 0) {
+                    bombPosition = positions.pop();
+                }
 
-                 const clickedBin = event.target;
-                 const clickedIndex = parseInt(clickedBin.dataset.index);
-                 clickedBin.classList.add('revealed');
+                // Create and display the bins
+                for (let i = 0; i < numBins; i++) {
+                    const bin = document.createElement('div');
+                    bin.classList.add('bin');
+                    bin.dataset.index = i;
+                    bin.textContent = binEmoji;
+                    bin.addEventListener('click', handleBinClick);
+                    gameBoard.appendChild(bin);
+                }
+            }
 
-                 if (clickedIndex === ratPosition) {
-                     // Found the rat!
-                     clickedBin.textContent = ratEmoji;
-                     resultDisplay.textContent = 'You found the rat! Drink up! 🍻';
-                     body.style.backgroundColor = 'red'; // Flash the background red
-                     pessiAudio.play(); // Play the audio
-                     gameOver = true;
-                     playAgainButton.style.display = 'block'; // Show the play again button
-                 } else if (clickedIndex === bombPosition) {
-                     // Found the bomb
-                     clickedBin.textContent = bombEmoji;
-                      resultDisplay.textContent = 'BOOM! Finish your drink!';
-                      resultDisplay.classList.add('bomb');
-                      gameOver = true;
-                      playAgainButton.style.display = 'block';
-                 }
-                  else {
-                     // It's empty
-                     clickedBin.textContent = '💨'; // A puff of smoke for an empty bin
-                     resultDisplay.textContent = 'Safe... for now.';
-                     resultDisplay.classList.add('safe');
-                 }
-             }
+            function handleBinClick(event) {
+                if (gameOver) return; // Stop if game is already over
 
-             // Event listener for the play again button
-             playAgainButton.addEventListener('click', setupGame);
+                const clickedBin = event.target;
+                const clickedIndex = parseInt(clickedBin.dataset.index);
 
-             // Initial game setup
-             setupGame();
-         });
-     </script>
+                // Prevent clicking the same bin twice
+                if (clickedBin.classList.contains('revealed')) return;
+                
+                clickedBin.classList.add('revealed');
 
- </body>
- </html>
+                if (clickedIndex === ratPosition) {
+                    // --- Found the RAT ---
+                    clickedBin.textContent = ratEmoji;
+                    resultDisplay.textContent = 'You found the rat! Drink up! 🍻';
+                    resultDisplay.className = 'rat-found';
+                    ratAudio.play();
+                    flashScreen('var(--rat-color)');
+                    endGame();
+                } else if (clickedIndex === bombPosition) {
+                    // --- Found the BOMB ---
+                    clickedBin.textContent = bombEmoji;
+                    resultDisplay.textContent = 'BOOM! Finish your drink!';
+                    resultDisplay.className = 'bomb-found';
+                    bombAudio.play();
+                    endGame();
+                } else if (clickedIndex === knifePosition) {
+                    // --- Found the KNIFE ---
+                    clickedBin.textContent = knifeEmoji;
+                    resultDisplay.textContent = 'You found the knife! You choose who drinks!';
+                    resultDisplay.className = 'knife-found';
+                    endGame();
+                } else {
+                    // --- It's EMPTY ---
+                    clickedBin.textContent = '💨'; // Puff of smoke
+                    resultDisplay.textContent = 'Safe... for now.';
+                    resultDisplay.className = 'safe';
+                }
+            }
+            
+            function flashScreen(color) {
+                body.style.backgroundColor = color;
+                setTimeout(() => {
+                    body.style.backgroundColor = 'var(--background-color)';
+                }, 300); // Flash duration
+            }
+
+            function endGame() {
+                gameOver = true;
+                playAgainButton.style.display = 'block';
+            }
+
+            playAgainButton.addEventListener('click', setupGame);
+
+            // Initial game setup
+            setupGame();
+        });
+    </script>
+
+</body>
+</html>
